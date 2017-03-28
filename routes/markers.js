@@ -14,7 +14,7 @@ var db = new Datastore({
 
 router.get('/:markerId', cors(), function (req, res) {
     var markerId = req.params.markerId;
-    console.log(markerId);
+    console.log('Request to retrieve marker with id ' + markerId);
     db.find({ fbId: markerId }, function (err, docs) {
         // docs is an array containing documents Mars, Earth, Jupiter
         // If no document is found, docs is equal to []
@@ -31,7 +31,28 @@ router.get('/:markerId', cors(), function (req, res) {
         }
     });
 });
-//267088810405306
+
+router.get('/:markerId/likes', cors(), function (req, res) {
+    var markerId = req.params.markerId;
+    var url = "https://graph.facebook.com/v2.8/" + markerId + "/likes?access_token=" + process.env.FB_APP_TOKEN;
+    axios.get(url, {})
+        .then(function (response) {
+            res.send(response.data);
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+});
+
+router.get('/', cors(), function (req, res) {
+    console.log('Request to retrieve all markers in area');
+    db.find({}, function (err, docs) {
+        res.status(200).send({
+            'items': docs
+        });
+    });
+});
+
 router.post('/', cors(), jsonParser, function (req, res) {
     var url = "https://graph.facebook.com/app/objects/place";
     var payload = {
@@ -57,8 +78,8 @@ router.post('/', cors(), jsonParser, function (req, res) {
                 db.insert({
                     fbId: objectId,
                     title: req.body.title,
-                    description: req.body.desc,
-                    location: req.body.loc
+                    description: req.body.description,
+                    location: req.body.location
                 }, function (error, newDoc) {
                     console.log('Inserted new record into db, with _id = ' + newDoc["_id"]);
                 });
