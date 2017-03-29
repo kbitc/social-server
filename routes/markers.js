@@ -73,7 +73,9 @@ router.post('/', cors(), jsonParser, function (req, res) {
             if (response.status == 200) {
                 var objectId = response.data.id;
                 res.status(200).send({
-                    'markerId': objectId
+                    'fbId': objectId,
+                    'title': req.body.title,
+                    'description': req.body.description
                 });
                 db.insert({
                     fbId: objectId,
