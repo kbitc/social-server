@@ -32,6 +32,44 @@ router.get('/:markerId', cors(), function (req, res) {
     });
 });
 
+router.delete('/:markerId', cors(), function (req, res) {
+    var markerId = req.params.markerId;
+    console.log('Request to delete marker with id ' + markerId);
+    var url = "https://graph.facebook.com/v2.8/" + markerId + "?access_token=" + process.env.FB_APP_TOKEN;
+    axios.delete(url)
+        .then(function (response) {
+            console.log(response.data);
+            if (response.data['success'] == true) {
+                db.remove({ fbId: markerId }, function (err, numRemoved) {
+                    if (numRemoved > 0) {
+                        res.status(200).send('Marker has been successfully removed');
+                    }
+                    else {
+                        res.status(404).send('Marker is not found');
+                    }
+                });
+            }
+        })
+        .catch(function (error) {
+            console.log(error);
+            res.status(400).send(error);
+        });
+
+});
+
+router.put('/:markerId', cors(), jsonParser, function (req, res) {
+    var markerId = req.params.markerId;
+    console.log('Request to update marker with id ' + markerId);
+    db.update({ fbId: markerId }, { $set: req.body }, function (err, numReplaced) {
+        if (numReplaced > 0) {
+            res.status(200).send('Marker has been successfully updated');
+        }
+        else {
+            res.status(404).send('Marker is not found');
+        }
+    });
+});
+
 router.get('/:markerId/likes', cors(), function (req, res) {
     var markerId = req.params.markerId;
     var url = "https://graph.facebook.com/v2.8/" + markerId + "/likes?access_token=" + process.env.FB_APP_TOKEN;
@@ -41,6 +79,7 @@ router.get('/:markerId/likes', cors(), function (req, res) {
         })
         .catch(function (error) {
             console.log(error);
+            res.status(400).send(error);
         });
 });
 
@@ -93,21 +132,8 @@ router.post('/', cors(), jsonParser, function (req, res) {
         })
         .catch(function (error) {
             console.log(error);
+            res.status(400).send(error);
         });
-});
-
-router.delete('/', cors(), jsonParser, function (req, res) {
-    console.log(JSON.stringify(req.body));
-    res.status(200).send({
-        'markerId': 0
-    });
-});
-
-router.put('/', cors(), jsonParser, function (req, res) {
-    console.log(JSON.stringify(req.body));
-    res.status(200).send({
-        'markerId': 0
-    });
 });
 
 module.exports = router;
