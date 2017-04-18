@@ -94,6 +94,7 @@ router.get('/', cors(), function (req, res) {
 
 router.post('/', cors(), jsonParser, function (req, res) {
     var url = "https://graph.facebook.com/app/objects/place";
+    console.log(req.body);
     var payload = {
         access_token: process.env.FB_APP_TOKEN,
         object: {
@@ -101,7 +102,7 @@ router.post('/', cors(), jsonParser, function (req, res) {
             "og:type": "place",
             "og:url": "http://www.oulu3d.fi/virtual-oulu/",
             "og:title": req.body.title,
-            "og:description": req.body.desc,
+            "og:description": req.body.description,
             "og:image": "http://www.oulu3d.fi/wp-content/uploads/2015/02/logo.png",
             "place:location:latitude": "65.015387",
             "place:location:longitude": "25.463297"
