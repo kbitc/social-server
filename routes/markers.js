@@ -20,10 +20,13 @@ router.get('/:markerId', cors(), function (req, res) {
         // If no document is found, docs is equal to []
         if (docs.length > 0) {
             var marker = docs[0];
-            res.render('marker', {
-                pageTitle: marker.title,
-                markerTitle: marker.title,
-                markerId: marker.fbId
+            res.status(200).send({
+                'fbId': marker.fbId,
+                'title': marker.title,
+                'description': marker.description,
+                'location': marker.location,
+                'author': marker.author,
+                'level': marker.level
             });
         }
         else {
@@ -85,7 +88,8 @@ router.get('/:markerId/likes', cors(), function (req, res) {
 
 router.get('/', cors(), function (req, res) {
     console.log('Request to retrieve all markers in area');
-    db.find({}, function (err, docs) {
+    var level = req.query.level;
+    db.find({ "level": level }, function (err, docs) {
         res.status(200).send({
             'items': docs
         });
@@ -115,15 +119,21 @@ router.post('/', cors(), jsonParser, function (req, res) {
                 res.status(200).send({
                     'fbId': objectId,
                     'title': req.body.title,
-                    'description': req.body.description
+                    'description': req.body.description,
+                    'location': req.body.location,
+                    'author': req.body.author,
+                    'level': req.body.level
                 });
                 db.insert({
                     fbId: objectId,
                     title: req.body.title,
                     description: req.body.description,
-                    location: req.body.location
+                    location: req.body.location,
+                    author: req.body.author,
+                    level: req.body.level
                 }, function (error, newDoc) {
                     console.log('Inserted new record into db, with _id = ' + newDoc["_id"]);
+                    console.log(newDoc);
                 });
                 console.log('Status 200, id = ' + objectId);
             }
