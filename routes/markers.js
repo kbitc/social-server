@@ -1,12 +1,23 @@
 const express = require('express');
 const axios = require('axios');
-var bodyParser = require('body-parser');
+const bodyParser = require('body-parser');
 var cors = require('cors');
 var Datastore = require('nedb');
+var winston = require('winston');
 
 var router = express.Router();
 var jsonParser = bodyParser.json();
 var urlencodedParser = bodyParser.urlencoded({ extended: true });
+
+// Configure logs
+winston.add(winston.transports.File, {
+    filename: './logs/markers.log',
+    options: {
+        flags: 'w'
+    }
+});
+
+// Open datastore
 var db = new Datastore({
     filename: './data/markers.json',
     autoload: true
@@ -14,11 +25,12 @@ var db = new Datastore({
 
 router.get('/:markerId', cors(), function (req, res) {
     var markerId = req.params.markerId;
-    console.log('Request to retrieve marker with id ' + markerId);
+    winston.info('Request to retrieve marker', { id: markerId });
     db.find({ fbId: markerId }, function (err, docs) {
-        // docs is an array containing documents Mars, Earth, Jupiter
-        // If no document is found, docs is equal to []
-        if (docs.length > 0) {
+        if (err) {
+            res.status(500).send("Database error");
+        }
+        else if (docs.length > 0) {
             var marker = docs[0];
             res.status(200).send({
                 'fbId': marker.fbId,
@@ -37,34 +49,47 @@ router.get('/:markerId', cors(), function (req, res) {
 
 router.delete('/:markerId', cors(), function (req, res) {
     var markerId = req.params.markerId;
-    console.log('Request to delete marker with id ' + markerId);
-    var url = "https://graph.facebook.com/v2.8/" + markerId + "?access_token=" + process.env.FB_APP_TOKEN;
-    axios.delete(url)
-        .then(function (response) {
-            console.log(response.data);
-            if (response.data['success'] == true) {
-                db.remove({ fbId: markerId }, function (err, numRemoved) {
-                    if (numRemoved > 0) {
-                        res.status(200).send('Marker has been successfully removed');
+    winston.info('Request to delete marker', { id: markerId });
+    db.find({ fbId: markerId }, function (error, docs) {
+        if (error) {
+            res.status(500).send("Database error");
+        }
+        else if (docs.length > 0) {
+            const url = "https://graph.facebook.com/v2.8/" + markerId + "?access_token=" + process.env.FB_APP_TOKEN;
+            axios.delete(url)
+                .then(function (response) {
+                    if (response.data['success'] == true) {
+                        db.remove({ fbId: markerId }, function (err, numRemoved) {
+                            if (err) {
+                                res.status(500).send("Database error");
+                            }
+                            else if (numRemoved > 0) {
+                                res.status(200).send('Marker has been successfully removed');
+                            }
+                            else {
+                                res.status(410).send('Marker is gone');
+                            }
+                        });
                     }
-                    else {
-                        res.status(404).send('Marker is not found');
-                    }
+                })
+                .catch(function (error) {
+                    res.status(error.response.status).send(error.response.statusText);
                 });
-            }
-        })
-        .catch(function (error) {
-            console.log(error);
-            res.status(400).send(error);
-        });
-
+        }
+        else {
+            res.status(404).send("Resource not found");
+        }
+    });
 });
 
 router.put('/:markerId', cors(), jsonParser, function (req, res) {
     var markerId = req.params.markerId;
-    console.log('Request to update marker with id ' + markerId);
+    winston.info('Request to update marker', { id: markerId });
     db.update({ fbId: markerId }, { $set: req.body }, function (err, numReplaced) {
-        if (numReplaced > 0) {
+        if (err) {
+            res.status(500).send("Database error");
+        }
+        else if (numReplaced > 0) {
             res.status(200).send('Marker has been successfully updated');
         }
         else {
@@ -73,32 +98,23 @@ router.put('/:markerId', cors(), jsonParser, function (req, res) {
     });
 });
 
-router.get('/:markerId/likes', cors(), function (req, res) {
-    var markerId = req.params.markerId;
-    var url = "https://graph.facebook.com/v2.8/" + markerId + "/likes?access_token=" + process.env.FB_APP_TOKEN;
-    axios.get(url, {})
-        .then(function (response) {
-            res.send(response.data);
-        })
-        .catch(function (error) {
-            console.log(error);
-            res.status(400).send(error);
-        });
-});
-
 router.get('/', cors(), function (req, res) {
-    console.log('Request to retrieve all markers in area');
     var level = req.query.level;
+    winston.info('Request to retrieve all markers in area', { area: level });
     db.find({ "level": level }, function (err, docs) {
-        res.status(200).send({
-            'items': docs
-        });
+        if (err) {
+            res.status(500).send("Database error");
+        }
+        else {
+            res.status(200).send({
+                'items': docs
+            });
+        }
     });
 });
 
 router.post('/', cors(), jsonParser, function (req, res) {
     var url = "https://graph.facebook.com/app/objects/place";
-    console.log(req.body);
     var payload = {
         access_token: process.env.FB_APP_TOKEN,
         object: {
@@ -114,36 +130,26 @@ router.post('/', cors(), jsonParser, function (req, res) {
     }
     axios.post(url, payload)
         .then(function (response) {
-            if (response.status == 200) {
-                var objectId = response.data.id;
-                res.status(200).send({
-                    'fbId': objectId,
-                    'title': req.body.title,
-                    'description': req.body.description,
-                    'location': req.body.location,
-                    'author': req.body.author,
-                    'level': req.body.level
-                });
-                db.insert({
-                    fbId: objectId,
-                    title: req.body.title,
-                    description: req.body.description,
-                    location: req.body.location,
-                    author: req.body.author,
-                    level: req.body.level
-                }, function (error, newDoc) {
-                    console.log('Inserted new record into db, with _id = ' + newDoc["_id"]);
-                    console.log(newDoc);
-                });
-                console.log('Status 200, id = ' + objectId);
+            var objectId = response.data.id;
+            winston.info('Created new marker', { id: objectId });
+            const marker = {
+                fbId: objectId,
+                title: req.body.title,
+                description: req.body.description,
+                location: req.body.location,
+                author: req.body.author,
+                level: req.body.level
             }
-            else {
-                res.status(response.status).send(response.statusText);
-            }
+            db.insert(marker, function (error, newDoc) {
+                if (error) {
+                    res.status(500).send("Database error");
+                }
+                else res.status(200).send(marker);
+            });
         })
         .catch(function (error) {
-            console.log(error);
-            res.status(400).send(error);
+            winston.error('Facebook raised error');
+            res.status(error.response.status).send(error.response.statusText);
         });
 });
 
