@@ -10,6 +10,10 @@ const server = app.listen(PORT, function () {
     console.log('Server is running on http://localhost:' + PORT);
 });
 
+// Define routes
 app.use(require('./routes'));
+// Define path or admin page
+app.use('/admin', express.static('./public'));
+// Set rendering mechanism. Though not used anywhere for now
 app.set('views', './views');
 app.set('view engine', 'pug');

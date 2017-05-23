@@ -1,36 +1,59 @@
+<!DOCTYPE html>
 <html>
 
 <head>
     <meta charset="UTF-8">
-    <title>Test</title>
-    <meta property="fb:app_id" content="511658775888304" />
-    <meta property="og:title" content="The Marker" />
-    <meta property="og:description" content="The Marker description" />
-    <meta property="og:type" content="place" />
-    <meta property="og:url" content="http://www.imdb.com/title/tt0117500/" />
-    <meta property="og:image" content="http://ia.media-imdb.com/images/rock.jpg" />
-    <meta property="place:location:latitude" content="65.015387" />
-    <meta property="place:location:longitude" content="25.463297" />
+    <title>Admin</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+        crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+    <nav class="navbar navbar-toggleable-md navbar-light navbar-inverse bg-inverse">
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
+            aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand" href="#">VL</a>
+        <!--<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+                <a class="nav-item nav-link active" href="#">Home <span class="sr-only">(current)</span></a>
+                <a class="nav-item nav-link" href="#">Pricing</a>
+                <a class="nav-item nav-link disabled" href="#">Disabled</a>
+            </div>
+        </div>-->
+    </nav>
+    <div class="container-fluid">
+        <div class="row" id="content">
+            <nav class="col-sm-3 col-md-2 bg-faded pr-0 pl-0 stretch-y">
+                <ul class="nav nav-pills flex-column">
+                    <li class="nav-item">
+                        <router-link to="/dashboard" class="nav-link">Dashboard</router-link>
+                    </li>
+                    <li class="nav-item">
+                        <router-link to="/markers" class="nav-link">Markers</router-link>
+                    </li>
+                    <li class="nav-item">
+                        <router-link to="/objects" class="nav-link">Object</router-link>
+                    </li>
+                </ul>
+            </nav>
+            <div class="col-sm-9 col-md-10">
+                <router-view></router-view>
+            </div>
+        </div>
+    </div>
+    <!-- Bootstrap 4 -->
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn"
+        crossorigin="anonymous"></script>
 
-    <!-- Load Facebook SDK for JavaScript -->
-    <div id="fb-root"></div>
-    <script>
-        (function (d, s, id) {
-            var js, fjs = d.getElementsByTagName(s)[0];
-            if (d.getElementById(id)) return;
-            js = d.createElement(s); js.id = id;
-            js.src = "//connect.facebook.net/ru_RU/sdk.js#xfbml=1&version=v2.8&appId=732332573570525";
-            fjs.parentNode.insertBefore(js, fjs);
-        }(document, 'script', 'facebook-jssdk'));
-    </script>
-
-    <!-- Your like button code -->
-    <div class="fb-like" data-href="https://vk.com/tosh823" data-layout="standard" data-action="like" data-size="small" data-show-faces="true"
-        data-share="true"></div>
-
+    <!-- Bundle -->
+    <script src="bundle.js"></script>
 </body>
 
 </html>

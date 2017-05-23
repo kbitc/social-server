@@ -1,6 +1,9 @@
 # Facebook private data
 .env
 
+# Built bundle
+public/bundle.js
+
 # VS Code
 .vscode
 
