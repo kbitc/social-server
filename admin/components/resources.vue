@@ -7,12 +7,13 @@
         </div>
         <div class="row">
             <div class="col">
-                <form>
+                <form enctype="multipart/form-data">
                     <div class="form-group">
                         <label for="picture-upload">Picture upload</label>
                         <input type="file" class="form-control-file" id="picture-upload" aria-describedby="picture-upload-desc">
                         <small id="picture-upload-desc" class="form-text text-muted">Select a file on your computer.</small>
                     </div>
+                    <button type="submit" class="btn btn-primary" v-on:click="handleUpload">Submit</button>
                 </form>
             </div>
         </div>
@@ -55,10 +56,19 @@ var ResourcesViewComponent = {
         this.fetchResources();
     },
     methods: {
-        fetchResources: function() {
-            const fetchResourcesURL = "/api/resources/";
-            axios.get(fetchResourcesURL).then(function (response) {
+        fetchResources: function () {
+            const resourcesURL = "/api/resources/";
+            axios.get(resourcesURL).then(function (response) {
                 this.resources = response.data.items;
+            }.bind(this)).catch(function (error) {
+                console.log(error);
+            });
+        },
+        handleUpload: function (event) {
+            var image = $('#picture-upload').val();
+            const resourcesURL = "/api/resources/";
+            axios.post(resourcesURL, image).then(function (response) {
+                
             }.bind(this)).catch(function (error) {
                 console.log(error);
             });
