@@ -1,7 +1,7 @@
 <template>
     <div class="row justify-content-center">
         <div class="col-4 align-self-center d-flex justify-content-center">
-            <p class="display-2">Welcome to the admin page!</p>
+            <p class="display-2">Dashboard</p>
         </div>
     </div>
 </template>
@@ -14,7 +14,7 @@
 
 <script>
 
-var WelcomeComponent = {
+var DashboardComponent = {
     data() {
         return {
             
@@ -31,5 +31,5 @@ var WelcomeComponent = {
     }
 }
 
-module.exports = WelcomeComponent;
+module.exports = DashboardComponent;
 </script>

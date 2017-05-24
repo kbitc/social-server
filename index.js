@@ -6,9 +6,6 @@ const axios = require('axios');
 const PORT = process.env.PORT || 3000;
 
 const app = express();
-const server = app.listen(PORT, function () {
-    console.log('Server is running on http://localhost:' + PORT);
-});
 
 // Define routes
 app.use(require('./routes'));
@@ -17,3 +14,8 @@ app.use('/admin', express.static('./public'));
 // Set rendering mechanism. Though not used anywhere for now
 app.set('views', './views');
 app.set('view engine', 'pug');
+
+const server = app.listen(PORT, function () {
+    console.log('Server is running on http://localhost:' + PORT);
+});
+

@@ -1,21 +1,13 @@
 const express = require('express');
 const axios = require('axios');
 const bodyParser = require('body-parser');
-var cors = require('cors');
 var Datastore = require('nedb');
 var winston = require('winston');
 
+var logger = winston.loggers.get('markers');
 var router = express.Router();
 var jsonParser = bodyParser.json();
 var urlencodedParser = bodyParser.urlencoded({ extended: true });
-
-// Configure logs
-winston.add(winston.transports.File, {
-    filename: './logs/markers.log',
-    options: {
-        flags: 'w'
-    }
-});
 
 // Open datastore
 var db = new Datastore({
@@ -23,9 +15,9 @@ var db = new Datastore({
     autoload: true
 });
 
-router.get('/:markerId', cors(), function (req, res) {
+router.get('/:markerId', function (req, res) {
     var markerId = req.params.markerId;
-    winston.info('Request to retrieve marker', { id: markerId });
+    logger.info('Request to retrieve marker', { id: markerId });
     db.find({ fbId: markerId }, function (err, docs) {
         if (err) {
             res.status(500).send("Database error");
@@ -47,9 +39,9 @@ router.get('/:markerId', cors(), function (req, res) {
     });
 });
 
-router.delete('/:markerId', cors(), function (req, res) {
+router.delete('/:markerId', function (req, res) {
     var markerId = req.params.markerId;
-    winston.info('Request to delete marker', { id: markerId });
+    logger.info('Request to delete marker', { id: markerId });
     db.find({ fbId: markerId }, function (error, docs) {
         if (error) {
             res.status(500).send("Database error");
@@ -82,9 +74,9 @@ router.delete('/:markerId', cors(), function (req, res) {
     });
 });
 
-router.put('/:markerId', cors(), jsonParser, function (req, res) {
+router.put('/:markerId', jsonParser, function (req, res) {
     var markerId = req.params.markerId;
-    winston.info('Request to update marker', { id: markerId });
+    logger.info('Request to update marker', { id: markerId });
     db.update({ fbId: markerId }, { $set: req.body }, function (err, numReplaced) {
         if (err) {
             res.status(500).send("Database error");
@@ -98,10 +90,17 @@ router.put('/:markerId', cors(), jsonParser, function (req, res) {
     });
 });
 
-router.get('/', cors(), function (req, res) {
+router.get('/', function (req, res) {
     var level = req.query.level;
-    winston.info('Request to retrieve all markers in area', { area: level });
-    db.find({ "level": level }, function (err, docs) {
+    var search = {};
+    if (level) {
+        search = { "level": level };
+    }
+    else {
+        level = "All";
+    }
+    logger.info('Request to retrieve markers in area', { area: level });
+    db.find(search, function (err, docs) {
         if (err) {
             res.status(500).send("Database error");
         }
@@ -113,7 +112,7 @@ router.get('/', cors(), function (req, res) {
     });
 });
 
-router.post('/', cors(), jsonParser, function (req, res) {
+router.post('/', jsonParser, function (req, res) {
     var url = "https://graph.facebook.com/app/objects/place";
     var payload = {
         access_token: process.env.FB_APP_TOKEN,
@@ -131,7 +130,7 @@ router.post('/', cors(), jsonParser, function (req, res) {
     axios.post(url, payload)
         .then(function (response) {
             var objectId = response.data.id;
-            winston.info('Created new marker', { id: objectId });
+            logger.info('Created new marker', { id: objectId });
             const marker = {
                 fbId: objectId,
                 title: req.body.title,
@@ -148,7 +147,7 @@ router.post('/', cors(), jsonParser, function (req, res) {
             });
         })
         .catch(function (error) {
-            winston.error('Facebook raised error');
+            logger.error('Facebook raised error');
             res.status(error.response.status).send(error.response.statusText);
         });
 });
