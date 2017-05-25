@@ -96,7 +96,9 @@
 </template>
 
 <style scoped>
-
+.fa {
+    pointer-events: none;
+}
 </style>
 
 <script>
@@ -114,7 +116,7 @@ var MarkersViewComponent = {
         }
     },
     computed: {
-    
+
     },
     mounted: function () {
         this.fetchMarkers();
@@ -129,12 +131,12 @@ var MarkersViewComponent = {
             });
         },
         openEditDialog: function (event) {
-            var markerID = event.target.parentElement.dataset.marker;
+            var markerID = event.target.dataset.marker;
             this.activeMarker = this.findMarkerById(markerID);
             $('#edit-modal').modal('show');
         },
         openDeleteDialog: function (event) {
-            var markerID = event.target.parentElement.dataset.marker;
+            var markerID = event.target.dataset.marker;
             this.activeMarker = this.findMarkerById(markerID);
             $('#delete-modal').modal('show');
         },

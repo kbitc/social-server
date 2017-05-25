@@ -66,7 +66,9 @@
 </template>
 
 <style scoped>
-
+.fa {
+    pointer-events: none;
+}
 </style>
 
 <script>
@@ -76,10 +78,7 @@ var ResourcesViewComponent = {
     data() {
         return {
             resources: [],
-            activeResource: {
-                filename: "",
-                res: ""
-            }
+            activeResource: {}
         }
     },
     computed: {
@@ -93,6 +92,7 @@ var ResourcesViewComponent = {
             const resourcesURL = "/api/resources/";
             axios.get(resourcesURL).then(function (response) {
                 this.resources = response.data.items;
+                this.activeResource = {};
             }.bind(this)).catch(function (error) {
                 console.log(error);
             });
@@ -115,7 +115,7 @@ var ResourcesViewComponent = {
             }
         },
         openDeleteDialog: function(event) {
-            var res = event.target.parentElement.dataset.res;
+            var res = event.target.dataset.res;
             this.activeResource = this.findResource(res);
             $('#delete-modal').modal('show');
         },
