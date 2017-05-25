@@ -4,7 +4,8 @@
   "description": "Testing FB functionality",
   "main": "server.js",
   "scripts": {
-    "start": "npm run build && node index.js",
+    "start": "npm run build && npm run serve",
+    "serve": "node index.js",
     "build": "browserify -t vueify -e admin/main.js -o public/bundle.js",
     "watch": "watchify -t vueify -e admin/main.js -o public/bundle.js --debug --verbose",
     "test": "echo \"Error: no test specified\" && exit 1"
