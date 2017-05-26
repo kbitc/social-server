@@ -179,7 +179,7 @@ var ResourcesViewComponent = {
         },
         edit: function (event) {
             const resourcesURL = "/api/resources/" + this.activeResource.res + "/";
-            const newAssigned = $('#edit-modal-assigned').val();
+            const newAssigned = parseInt($('#edit-modal-assigned').val());
             const newLevel = $('#edit-modal-level').val();
             axios.put(resourcesURL, {
                 assigned: newAssigned,
