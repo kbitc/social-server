@@ -23,10 +23,11 @@
                     <div class="card">
                         <img class="card-img-top img-fluid" :src="resource.url" alt="Card image cap">
                         <div class="card-block">
-                            <h4 class="card-title">Resource</h4>
-                            <p class="card-text">{{ resource.filename }}</p>
+                            <h5 class="card-title">{{ resource.filename }}</h5>
+                            <p class="card-text">Level: {{ resource.level }}</p>
+                            <p class="card-text">Assigned: {{ (resource.assigned == 0 ? "Not assigned": resource.assigned) }}</p>
                             <div class="btn-group" role="group" aria-label="Marker controls">
-                                <button type="button" class="btn btn-sm btn-primary" :data-res="resource.res">
+                                <button type="button" class="btn btn-sm btn-primary" :data-res="resource.res" v-on:click="openEditDialog">
                                     <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
                                 </button>
                                 <button type="button" class="btn btn-sm btn-danger" :data-res="resource.res" v-on:click="openDeleteDialog">
@@ -41,7 +42,7 @@
                 </div>
             </template>
         </div>
-
+    
         <!-- Delete dialog -->
         <div class="modal fade" id="delete-modal">
             <div class="modal-dialog" role="document">
@@ -57,6 +58,49 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-primary" id="delete-modal-ok" v-on:click="remove">Delete</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Edit dialog -->
+        <div class="modal fade" id="edit-modal">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Virtual Library</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <div class="form-group">
+                                <label for="edit-modal-assigned" class="form-control-label">Assigned:</label>
+                                <select class="form-control" id="edit-modal-assigned" :value="activeResource.assigned">
+                                    <option value="0">Not assigned</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="dit-modal-level" class="form-control-label">Level:</label>
+                                <select class="form-control" id="edit-modal-level" :value="activeResource.level">
+                                    <option value="All">All</option>
+                                    <option value="MainLibrary">MainLibrary</option>
+                                    <option value="Forest">Forest</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" id="edit-modal-ok" v-on:click="edit">Apply</button>
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                     </div>
                 </div>
@@ -114,15 +158,34 @@ var ResourcesViewComponent = {
                 });
             }
         },
-        openDeleteDialog: function(event) {
+        openDeleteDialog: function (event) {
             var res = event.target.dataset.res;
             this.activeResource = this.findResource(res);
             $('#delete-modal').modal('show');
+        },
+        openEditDialog: function (event) {
+            var res = event.target.dataset.res;
+            this.activeResource = this.findResource(res);
+            $('#edit-modal').modal('show');
         },
         remove: function (event) {
             const resourcesURL = "/api/resources/" + this.activeResource.res + "/";
             axios.delete(resourcesURL).then(function (response) {
                 $('#delete-modal').modal('hide');
+                this.fetchResources();
+            }.bind(this)).catch(function (error) {
+                console.log(error);
+            });
+        },
+        edit: function (event) {
+            const resourcesURL = "/api/resources/" + this.activeResource.res + "/";
+            const newAssigned = $('#edit-modal-assigned').val();
+            const newLevel = $('#edit-modal-level').val();
+            axios.put(resourcesURL, {
+                assigned: newAssigned,
+                level: newLevel
+            }).then(function (response) {
+                $('#edit-modal').modal('hide');
                 this.fetchResources();
             }.bind(this)).catch(function (error) {
                 console.log(error);

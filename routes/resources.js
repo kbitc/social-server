@@ -1,8 +1,10 @@
 const express = require('express');
 const fs = require('fs');
+const bodyParser = require('body-parser');
 var multer = require('multer')
 var winston = require('winston');
 var Datastore = require('nedb');
+var jsonParser = bodyParser.json();
 
 // Configure upload
 var storage = multer.diskStorage({
@@ -47,7 +49,8 @@ router.get('/', function (req, res) {
                     filename: docs[i].originalname,
                     res: docs[i].filename,
                     ts: docs[i].timestamp,
-                    assigned: docs[i].assigned
+                    assigned: docs[i].assigned,
+                    level: docs[i].level
                 });
             }
             res.status(200).send({ items: package });
@@ -65,8 +68,9 @@ router.post('/', upload.single('file'), function (req, res) {
             filename: req.file.filename,
             originalname: req.file.originalname,
             timestamp: Date.now(),
-            assigned: 0
-        }
+            assigned: 0,
+            level: "All"
+        };
         db.insert(fileObject, function (error, newDoc) {
             if (error) {
                 res.status(500).send("Database error");
@@ -90,9 +94,31 @@ router.get('/:resource', function (req, res) {
                 filename: docs[0].originalname,
                 res: docs[0].filename,
                 ts: docs[0].timestamp,
-                assigned: docs[0].assigned
+                assigned: docs[0].assigned,
+                level: docs[0].level
             };
             res.status(200).send(result);
+        }
+        else {
+            res.status(404).send("Resource not found");
+        }
+    });
+});
+
+router.put('/:resource', jsonParser, function(req, res) {
+    var resource = req.params.resource;
+    logger.info('Request to modify resource', { file: resource });
+    // Keep only fields that could be modified
+    var update = {
+        assigned: req.body.assigned,
+        level: req.body.level
+    };
+    db.update({ filename: resource }, { $set: update }, function (error, numReplaced) {
+        if (error) {
+            res.status(500).send("Database error");
+        }
+        else if (numReplaced > 0) {
+            res.status(200).send('Resource has been successfully updated');
         }
         else {
             res.status(404).send("Resource not found");
