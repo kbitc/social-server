@@ -4,6 +4,14 @@
 # Built bundle
 public/bundle.js
 
+# Persistent databases
+data/markers.json
+data/resources.json
+
+# Uploads
+public/resources/*
+!public/resources/README.md
+
 # VS Code
 .vscode
 

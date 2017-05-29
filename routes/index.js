@@ -32,8 +32,39 @@ winston.loggers.add('resources', {
         }
     }
 });
+// Configure the logger for resources
+winston.loggers.add('books', {
+    console: {
+        colorize: true,
+        timestamp: true,
+        label: 'Search'
+    },
+    file: {
+        filename: './logs/books.log',
+        options: {
+            flags: 'w'
+        }
+    }
+});
+
+// Configure the logger for resources
+winston.loggers.add('map', {
+    console: {
+        colorize: true,
+        timestamp: true,
+        label: 'Map'
+    },
+    file: {
+        filename: './logs/map.log',
+        options: {
+            flags: 'w'
+        }
+    }
+});
 
 router.use('/api/markers', cors(), require('./markers'));
 router.use('/api/resources', cors(), require('./resources'));
+router.use('/api/books', cors(), require('./books'));
+router.use('/api/map', cors(), require('./map'));
 
 module.exports = router;
