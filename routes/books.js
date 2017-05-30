@@ -3,13 +3,19 @@ const axios = require('axios');
 const querystring = require('querystring');
 const cheerio = require('cheerio');
 var winston = require('winston');
+var xml2js = require('xml2js');
 
 var router = express.Router();
 
+// For koha
 const koha = 'https://koha.outikirjastot.fi';
 const search = '/cgi-bin/koha/opac-search.pl?idx=&q=';
 const details = '/cgi-bin/koha/opac-detail.pl?biblionumber=';
 const ouluLocation = '&branch_group_limit=branch%3AOUPK';
+
+// For goodreads
+const goodreads = 'https://www.goodreads.com';
+const byISBN = '/book/isbn/';
 
 var logger = winston.loggers.get('books');
 
@@ -35,9 +41,16 @@ router.get('/', function (req, res) {
                 res.status(error.response.status).send(error.response.statusText);
             });
     }
-    else if (req.query.id != null) {
-        logger.info('Request to retrieve details', { id: req.query.id });
-        var url = koha + details + req.query.id;
+    else if (req.query.id != null || req.query.isbn != null) {
+        var url;
+        if (req.query.id != null) {
+            logger.info('Request to retrieve details', { id: req.query.id });
+            url = koha + details + req.query.id;
+        }
+        else if (req.query.isbn != null) {
+            logger.info('Request to retrieve details', { isbn: req.query.isbn });
+            url = koha + search + req.query.isbn + ouluLocation;
+        }
         var config = {
             headers: {
                 host: 'koha.outikirjastot.fi'
@@ -47,8 +60,24 @@ router.get('/', function (req, res) {
             .then(function (response) {
                 var book = parseBookDetailsPage(response.data);
                 book["bookId"] = req.query.id;
-                res.status(200).send({
-                    data: book
+                var gr = goodreads + byISBN + book.isbn + '?key=' + process.env.GOODREADS_TOKEN;
+                axios.get(gr).then(function (response) {
+                    xml2js.parseString(response.data, function (err, result) {
+                        book["goodreads"] = {};
+                        if (!err) {
+                            var grData = parseGoodReadsBook(result);
+                            book["goodreads"] = grData;
+                        }
+                        res.status(200).send({
+                            data: book
+                        });
+                    });
+                }).catch(function (error) {
+                    logger.error('Cannot retrieve goodreads details', { isbn: book.isbn });
+                    book["goodreads"] = {};
+                    res.status(200).send({
+                        data: book
+                    });
                 });
             })
             .catch(function (error) {
@@ -94,7 +123,8 @@ function parseBookDetailsPage(page) {
     });
     $(bookInfo).find('.results_summary.isbn > *').each(function (index, element) {
         if ($(element).attr('property') == 'isbn') {
-            book['isbn'] = $(element).text().trim();
+            var isbn = $(element).text().trim();
+            book['isbn'] = isbn.substring(0, isbn.length - 1);
         }
     });
     // Holds data
@@ -105,6 +135,10 @@ function parseBookDetailsPage(page) {
         if (libraryName == 'Oulun kaupungin pääkirjasto') {
             // Location fetching
             var locationModel = {};
+            // Availability fetching
+            var available = $(element).find('.status').text().trim();
+            locationModel['available'] = (available === "Available");
+            // Call number fetching
             var locationCallNumber = $(element).find('.call_no');
             locationModel['callNumber'] = $(locationCallNumber).text().trim();
             // Collection fetching
@@ -113,7 +147,6 @@ function parseBookDetailsPage(page) {
             book['locations'].push(locationModel);
         }
     });
-    book['locations'] = removeDuplicates(book);
     return book;
 };
 
@@ -150,6 +183,35 @@ function parseSearchResultsPage(page) {
     });
     return searchResults;
 };
+
+function parseGoodReadsBook(page) {
+    var grData = {};
+    var mainBook = page.GoodreadsResponse.book[0];
+    grData['id'] = mainBook['id'][0];
+    grData['title'] = mainBook['title'][0];
+    grData['rating'] = mainBook['average_rating'][0];
+    grData['publisher'] = mainBook['publisher'][0];
+    grData['publish_year'] = mainBook['publication_year'][0];
+    var similar = [];
+    for (var i = 0; i < mainBook['similar_books'][0]['book'].length; i++) {
+        var similarBook = mainBook['similar_books'][0]['book'][i];
+        var authors = [];
+        for (var k = 0; k < similarBook['authors'][0]['author'].length; k++) {
+            var author = similarBook['authors'][0]['author'][k];
+            authors.push(author['name'][0]);
+        }
+        similar.push({
+            id: similarBook['id'][0],
+            title: similarBook['title'][0],
+            cover: similarBook['image_url'][0],
+            isbn: similarBook['isbn13'][0],
+            rating: similarBook['average_rating'][0],
+            authors: authors
+        });
+    }
+    grData['similar'] = similar;
+    return grData;
+}
 
 function removeDuplicates(book) {
     var locations = book.locations;
