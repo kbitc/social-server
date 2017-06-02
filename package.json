@@ -7,6 +7,7 @@
     "start": "npm run build && npm run serve",
     "serve": "node index.js",
     "build": "browserify -t vueify -e admin/main.js -o public/bundle.js",
+    "build-prod": "NODE_ENV=production browserify -t vueify -e admin/main.js -o public/bundle.js",
     "watch": "watchify -t vueify -e admin/main.js -o public/bundle.js --debug --verbose",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
