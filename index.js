@@ -13,7 +13,8 @@ app.use(require('./routes'));
 // Define path or admin page
 app.use(serveStatic(path.join(__dirname, 'public'), {
   maxAge: '1d',
-  setHeaders: setCustomCacheControl
+  setHeaders: setCustomCacheControl,
+  etag: false
 }));
 
 function setCustomCacheControl (res, path) {
