@@ -192,6 +192,12 @@ function parseGoodReadsBook(page) {
     grData['rating'] = mainBook['average_rating'][0];
     grData['publisher'] = mainBook['publisher'][0];
     grData['publish_year'] = mainBook['publication_year'][0];
+    grData['cover'] = mainBook['image_url'][0];
+    grData['authors'] = [];
+    for (var j = 0; j < mainBook['authors'][0]['author'].length; j++) {
+        var author = mainBook['authors'][0]['author'][j];
+        grData['authors'].push(author['name'][0]);
+    }
     var similar = [];
     for (var i = 0; i < mainBook['similar_books'][0]['book'].length; i++) {
         var similarBook = mainBook['similar_books'][0]['book'][i];
