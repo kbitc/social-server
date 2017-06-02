@@ -12,8 +12,16 @@ const app = express();
 app.use(require('./routes'));
 // Define path or admin page
 app.use(serveStatic(path.join(__dirname, 'public'), {
-  cacheControl: false
+  maxAge: '1d',
+  setHeaders: setCustomCacheControl
 }));
+
+function setCustomCacheControl (res, path) {
+  if (serveStatic.mime.lookup(path) === 'text/html') {
+    // Custom Cache-Control for HTML files
+    res.setHeader('Cache-Control', 'public, max-age=0')
+  }
+}
 //app.use('/', express.static('./public'));
 // Set rendering mechanism. Though not used anywhere for now
 app.set('views', './views');
