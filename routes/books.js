@@ -63,7 +63,6 @@ router.get('/', function (req, res) {
                 var gr = goodreads + byISBN + book.isbn + '?key=' + process.env.GOODREADS_TOKEN;
                 axios.get(gr).then(function (response) {
                     xml2js.parseString(response.data, function (err, result) {
-                        book["goodreads"] = {};
                         if (!err) {
                             var grData = parseGoodReadsBook(result);
                             book["goodreads"] = grData;
@@ -73,8 +72,7 @@ router.get('/', function (req, res) {
                         });
                     });
                 }).catch(function (error) {
-                    logger.error('Cannot retrieve goodreads details', { isbn: book.isbn });
-                    book["goodreads"] = {};
+                    logger.warn('Cannot retrieve goodreads details', { isbn: book.isbn });
                     res.status(200).send({
                         data: book
                     });
