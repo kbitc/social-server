@@ -7,6 +7,7 @@ public/bundle.js
 # Persistent databases
 data/markers.json
 data/resources.json
+data/stories.json
 
 # Uploads
 public/resources/*
