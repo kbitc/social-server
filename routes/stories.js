@@ -18,14 +18,27 @@ var db = new Datastore({
 
 // Get all stories
 router.get('/', function(req, res) {
-    logger.info('Request to retrieve all stories');
+    logger.info('Request to retrieve stories');
     db.find({}, function (err, docs) {
         if (err) {
             res.status(500).send("Database error");
         }
         else {
+            var items = [];
+            var offset = (req.query.offset != null ? parseInt(req.query.offset) : 0);
+            var limit = (req.query.limit != null ? parseInt(req.query.limit) : docs.length);
+            if (offset < docs.length) {
+                for (var i = offset, c = Math.min(offset + limit, docs.length); i < c; i++) {
+                    items.push(docs[i]);
+                }
+            }
             res.status(200).send({
-                'items': docs
+                'meta': {
+                    'total': docs.length,
+                    'offset': offset,
+                    'limit': limit
+                },
+                'items': items
             });
         }
     });
