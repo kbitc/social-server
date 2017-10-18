@@ -50,7 +50,10 @@ router.get('/', function (req, res) {
                     res: docs[i].filename,
                     ts: docs[i].timestamp,
                     assigned: docs[i].assigned,
-                    level: docs[i].level
+                    level: docs[i].level,
+                    title: docs[i].title,
+                    author: docs[i].author,
+                    order: docs[i].order
                 });
             }
             res.status(200).send({ items: package });
@@ -69,7 +72,10 @@ router.post('/', upload.single('file'), function (req, res) {
             originalname: req.file.originalname,
             timestamp: Date.now(),
             assigned: 0,
-            level: "All"
+            level: "All",
+            title: "",
+            author: "",
+            order: 0
         };
         db.insert(fileObject, function (error, newDoc) {
             if (error) {
@@ -95,7 +101,10 @@ router.get('/:resource', function (req, res) {
                 res: docs[0].filename,
                 ts: docs[0].timestamp,
                 assigned: docs[0].assigned,
-                level: docs[0].level
+                level: docs[0].level,
+                title: docs[0].title,
+                author: docs[0].author,
+                order: docs[0].order
             };
             res.status(200).send(result);
         }
@@ -105,13 +114,16 @@ router.get('/:resource', function (req, res) {
     });
 });
 
-router.put('/:resource', jsonParser, function(req, res) {
+router.put('/:resource', jsonParser, function (req, res) {
     var resource = req.params.resource;
     logger.info('Request to modify resource', { file: resource });
     // Keep only fields that could be modified
     var update = {
         assigned: req.body.assigned,
-        level: req.body.level
+        level: req.body.level,
+        title: req.body.title,
+        author: req.body.author,
+        order: req.body.order
     };
     db.update({ filename: resource }, { $set: update }, function (error, numReplaced) {
         if (error) {
@@ -154,6 +166,38 @@ router.delete('/:resource', function (req, res) {
             res.status(404).send("Resource not found");
         }
     })
+});
+
+// Get all pictures assigned to certain frame
+router.get('/frame/:frame', function (req, res) {
+    var assigned = parseInt(req.params.frame);
+    logger.info('Request to retrieve resources for frame', { frame: assigned });
+    db.find({ assigned: assigned }, function(error, docs) {
+        if (error) {
+            res.status(500).send("Database error");
+        }
+        else {
+            var package = [];
+            docs.forEach(function (doc) {
+                package.push({
+                    url: doc.url,
+                    filename: doc.originalname,
+                    res: doc.filename,
+                    ts: doc.timestamp,
+                    level: doc.level,
+                    title: doc.title,
+                    author: doc.author,
+                    order: doc.order
+                });
+            });
+            package.sort(function (a, b) {
+                return a.order - b.order;
+            });
+            res.status(200).send({
+                data: package
+            });
+        }
+    });
 });
 
 module.exports = router;

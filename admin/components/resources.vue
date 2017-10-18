@@ -24,8 +24,11 @@
                         <img class="card-img-top img-fluid" :src="resource.url" alt="Card image cap">
                         <div class="card-block">
                             <h5 class="card-title">{{ resource.filename }}</h5>
+                            <p class="card-text">Title: {{ resource.title == "" ? "Undefined" : resource.title}}</p>
+                            <p class="card-text">Author: {{ resource.author == "" ? "Undefined" : resource.author}}</p>
                             <p class="card-text">Level: {{ resource.level }}</p>
                             <p class="card-text">Assigned: {{ (resource.assigned == 0 ? "Not assigned": resource.assigned) }}</p>
+                            <p class="card-text">Order: {{ resource.order }}</p>
                             <div class="btn-group" role="group" aria-label="Marker controls">
                                 <button type="button" class="btn btn-sm btn-primary" :data-res="resource.res" v-on:click="openEditDialog">
                                     <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
@@ -77,17 +80,20 @@
                     <div class="modal-body">
                         <form>
                             <div class="form-group">
+                                <label for="edit-modal-title" class="form-control-label">Title:</label>
+                                <input type="text" class="form-control" id="edit-modal-title" :value="activeResource.title">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-modal-author" class="form-control-label">Author:</label>
+                                <input type="text" class="form-control" id="edit-modal-author" :value="activeResource.author">
+                            </div>
+                            <div class="form-group">
                                 <label for="edit-modal-assigned" class="form-control-label">Assigned:</label>
-                                <select class="form-control" id="edit-modal-assigned" :value="activeResource.assigned">
-                                    <option value="0">Not assigned</option>
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                    <option value="4">4</option>
-                                    <option value="5">5</option>
-                                    <option value="6">6</option>
-                                    <option value="7">7</option>
-                                </select>
+                                <input type="number" class="form-control" id="edit-modal-assigned" :value="activeResource.assigned">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-modal-order" class="form-control-label">Order:</label>
+                                <input type="number" class="form-control" id="edit-modal-order" :value="activeResource.order">
                             </div>
                             <div class="form-group">
                                 <label for="dit-modal-level" class="form-control-label">Level:</label>
@@ -95,6 +101,8 @@
                                     <option value="All">All</option>
                                     <option value="MainLibrary">MainLibrary</option>
                                     <option value="Forest">Forest</option>
+                                    <option value="Cave">Cave</option>
+                                    <option value="Future">Future</option>
                                 </select>
                             </div>
                         </form>
@@ -179,11 +187,17 @@ var ResourcesViewComponent = {
         },
         edit: function (event) {
             const resourcesURL = "/api/resources/" + this.activeResource.res + "/";
+            const newTitle = $('#edit-modal-title').val();
+            const newAuthor = $('#edit-modal-author').val();
             const newAssigned = parseInt($('#edit-modal-assigned').val());
             const newLevel = $('#edit-modal-level').val();
+            const newOrder = parseInt($('#edit-modal-order').val());
             axios.put(resourcesURL, {
                 assigned: newAssigned,
-                level: newLevel
+                level: newLevel,
+                title: newTitle,
+                author: newAuthor,
+                order: newOrder
             }).then(function (response) {
                 $('#edit-modal').modal('hide');
                 this.fetchResources();
