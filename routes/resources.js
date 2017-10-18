@@ -36,29 +36,62 @@ var db = new Datastore({
 });
 
 router.get('/', function (req, res) {
-    logger.info('Request to retrieve resources');
-    db.find({}, function (error, docs) {
-        if (error) {
-            res.status(500).send("Database error");
-        }
-        else {
-            var package = [];
-            for (var i = 0; i < docs.length; i++) {
-                package.push({
-                    url: docs[i].url,
-                    filename: docs[i].originalname,
-                    res: docs[i].filename,
-                    ts: docs[i].timestamp,
-                    assigned: docs[i].assigned,
-                    level: docs[i].level,
-                    title: docs[i].title,
-                    author: docs[i].author,
-                    order: docs[i].order
+    var frame = req.query.frame;
+    if (frame != null && frame != "") {
+        frame = parseInt(frame);
+        logger.info('Request to retrieve resources for frame', { frame: frame });
+        db.find({ assigned: frame }, function(error, docs) {
+            if (error) {
+                res.status(500).send("Database error");
+            }
+            else {
+                var package = [];
+                docs.forEach(function (doc) {
+                    package.push({
+                        url: doc.url,
+                        filename: doc.originalname,
+                        res: doc.filename,
+                        ts: doc.timestamp,
+                        level: doc.level,
+                        title: doc.title,
+                        author: doc.author,
+                        order: doc.order
+                    });
+                });
+                package.sort(function (a, b) {
+                    return a.order - b.order;
+                });
+                res.status(200).send({
+                    items: package
                 });
             }
-            res.status(200).send({ items: package });
-        }
-    });
+        });
+    }
+    else {
+        logger.info('Request to retrieve all resources');
+        db.find({}, function (error, docs) {
+            if (error) {
+                res.status(500).send("Database error");
+            }
+            else {
+                var package = [];
+                for (var i = 0; i < docs.length; i++) {
+                    package.push({
+                        url: docs[i].url,
+                        filename: docs[i].originalname,
+                        res: docs[i].filename,
+                        ts: docs[i].timestamp,
+                        assigned: docs[i].assigned,
+                        level: docs[i].level,
+                        title: docs[i].title,
+                        author: docs[i].author,
+                        order: docs[i].order
+                    });
+                }
+                res.status(200).send({ items: package });
+            }
+        });
+    }
 });
 
 router.post('/', upload.single('file'), function (req, res) {
@@ -166,38 +199,6 @@ router.delete('/:resource', function (req, res) {
             res.status(404).send("Resource not found");
         }
     })
-});
-
-// Get all pictures assigned to certain frame
-router.get('/frame/:frame', function (req, res) {
-    var assigned = parseInt(req.params.frame);
-    logger.info('Request to retrieve resources for frame', { frame: assigned });
-    db.find({ assigned: assigned }, function(error, docs) {
-        if (error) {
-            res.status(500).send("Database error");
-        }
-        else {
-            var package = [];
-            docs.forEach(function (doc) {
-                package.push({
-                    url: doc.url,
-                    filename: doc.originalname,
-                    res: doc.filename,
-                    ts: doc.timestamp,
-                    level: doc.level,
-                    title: doc.title,
-                    author: doc.author,
-                    order: doc.order
-                });
-            });
-            package.sort(function (a, b) {
-                return a.order - b.order;
-            });
-            res.status(200).send({
-                data: package
-            });
-        }
-    });
 });
 
 module.exports = router;
