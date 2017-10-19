@@ -29,6 +29,7 @@
                             <p class="card-text">Level: {{ resource.level }}</p>
                             <p class="card-text">Assigned: {{ (resource.assigned == 0 ? "Not assigned": resource.assigned) }}</p>
                             <p class="card-text">Order: {{ resource.order }}</p>
+                            <p class="card-text">Likes: {{ resource.likes }}</p>
                             <div class="btn-group" role="group" aria-label="Marker controls">
                                 <button type="button" class="btn btn-sm btn-primary" :data-res="resource.res" v-on:click="openEditDialog">
                                     <i class="fa fa-pencil-square-o" aria-hidden="true"></i>

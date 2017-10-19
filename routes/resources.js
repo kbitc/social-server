@@ -55,7 +55,8 @@ router.get('/', function (req, res) {
                         level: doc.level,
                         title: doc.title,
                         author: doc.author,
-                        order: doc.order
+                        order: doc.order,
+                        likes: doc.likes
                     });
                 });
                 package.sort(function (a, b) {
@@ -85,7 +86,8 @@ router.get('/', function (req, res) {
                         level: docs[i].level,
                         title: docs[i].title,
                         author: docs[i].author,
-                        order: docs[i].order
+                        order: docs[i].order,
+                        likes: docs[i].likes
                     });
                 }
                 res.status(200).send({ items: package });
@@ -108,7 +110,8 @@ router.post('/', upload.single('file'), function (req, res) {
             level: "All",
             title: "",
             author: "",
-            order: 0
+            order: 0,
+            likes: 0
         };
         db.insert(fileObject, function (error, newDoc) {
             if (error) {
@@ -137,7 +140,8 @@ router.get('/:resource', function (req, res) {
                 level: docs[0].level,
                 title: docs[0].title,
                 author: docs[0].author,
-                order: docs[0].order
+                order: docs[0].order,
+                likes: docs[0].likes
             };
             res.status(200).send(result);
         }
@@ -151,13 +155,13 @@ router.put('/:resource', jsonParser, function (req, res) {
     var resource = req.params.resource;
     logger.info('Request to modify resource', { file: resource });
     // Keep only fields that could be modified
-    var update = {
-        assigned: req.body.assigned,
-        level: req.body.level,
-        title: req.body.title,
-        author: req.body.author,
-        order: req.body.order
-    };
+    var update = {};
+    if (req.body.assigned != null) update.assigned = parseInt(req.body.assigned);
+    if (req.body.level != null) update.level = req.body.level;
+    if (req.body.title != null) update.title = req.body.title;
+    if (req.body.author != null) update.author = req.body.author;
+    if (req.body.order != null) update.order = parseInt(req.body.order);
+    if (req.body.likes != null) update.likes = parseInt(req.body.likes);
     db.update({ filename: resource }, { $set: update }, function (error, numReplaced) {
         if (error) {
             res.status(500).send("Database error");
