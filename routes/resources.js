@@ -167,7 +167,9 @@ router.put('/:resource', jsonParser, function (req, res) {
             res.status(500).send("Database error");
         }
         else if (numReplaced > 0) {
-            res.status(200).send('Resource has been successfully updated');
+            res.status(200).send({
+                updated: update
+            });
         }
         else {
             res.status(404).send("Resource not found");
