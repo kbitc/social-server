@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "npm run build && npm run serve",
+    "debug": "node --inspect index.js",
     "serve": "node index.js",
     "build": "browserify -t vueify -e admin/main.js -o public/bundle.js",
     "build-prod-win": "SET NODE_ENV=production browserify -t vueify -e admin/main.js -o public/bundle.js",

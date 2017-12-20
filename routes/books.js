@@ -13,6 +13,8 @@ const search = '/cgi-bin/koha/opac-search.pl?idx=&q=';
 const details = '/cgi-bin/koha/opac-detail.pl?biblionumber=';
 const ouluLocation = '&branch_group_limit=branch%3AOUPK';
 
+// https://koha.outikirjastot.fi/cgi-bin/koha/opac-search.pl?idx=ti&q=Sota&idx=kw&limit=mc-itype%2Cphr%3AKI&limit-yr=&limit=branch%3AOUPK&sort_by=pubdate_dsc&do=Search
+
 // For goodreads
 const goodreads = 'https://www.goodreads.com';
 const byISBN = '/book/isbn/';
@@ -91,18 +93,17 @@ function parseBookDetailsPage(page) {
     var book = {};
     var $ = cheerio.load(page);
     var bookInfo = $('#catalogue_detail_biblio').children('.record');
-    var holdsInfo = $('.holdingst');
-    book['title'] = $(bookInfo).find('.title').text();
-    book['cover'] = $(bookInfo).find('.jokunen_image_container').children('img').attr('src');
+    var holdsInfo = $('#holdings').find('.holdingst');
+    book['title'] = $(bookInfo).find('.title').clone().children().remove().end().text().replace(/([/])+/g, '').trim();
+    book['cover'] = $('#catalogue_detail_biblio').find('.bookcover').children('img').attr('src');
     var authors = [];
     $(bookInfo).find('.author').find('span').each(function (index, element) {
         if ($(element).attr('property') == 'name') {
             authors.push($(element).text());
         }
     });
-    book['author'] = authors.join(';');
-    book['type'] = $(bookInfo).find('.results_summary.type').text();
-    book['language'] = $(bookInfo).find('.results_summary.language').children('img').attr('alt');
+    book['authors'] = authors;
+    book['type'] = $(bookInfo).find('.results_summary.type').clone().children().remove().end().text();
     var pubArray = [];
     $(bookInfo).find('.results_summary.publisher').find('span').each(function (index, element) {
         var property = $(element).attr('property');
@@ -128,7 +129,7 @@ function parseBookDetailsPage(page) {
     // Holds data
     book['locations'] = [];
     $(holdsInfo).find('tbody').children().each(function (index, element) {
-        var library = $(element).find('.location').children('div');
+        var library = $(element).find('.location').children('span').first();
         var libraryName = $(library).text().trim();
         if (libraryName == 'Oulun kaupungin pääkirjasto') {
             // Location fetching
@@ -154,27 +155,30 @@ function parseSearchResultsPage(page) {
     var searchResults = [];
     $(searchResultsTable).children('tr').each(function (index, element) {
         var info = $(element).find('.bibliocol');
-        var titleA = $(info, 'p').find('.title');
+        var titleA = $(info, 'a').find('.title');
         var authorSpan = $(info, 'p').find('.author');
-        var coverA = $(info, 'a').find('.jokunen_image_container');
-        var materialSpan = $(info, 'span').find('.results_summary');
-        var languageSpan = $(info, 'span').find('.results_summary.language');
+        var coverA = $(info, 'div').find('.p1');
         var publisherSpan = $(info, 'span').find('.results_summary.publisher');
-        var title = $(titleA).text().trim();
+        // .clone().children().remove().end() 
+        // returns only a first text, ignoring inner spans
+        var title = $(titleA).clone().children().remove().end().text();
+        title = title.replace(/([/])+/g, '').trim();
         var href = $(titleA).attr('href');
         var cover = $(coverA).children('img').attr('src');
         var bookId = querystring.parse(href, '?')["biblionumber"];
-        var author = $(authorSpan).text().trim();
-        var materialType = $(materialSpan).children('img').attr('alt');
-        var language = $(languageSpan).children('img').attr('alt');
-        var publisher = $(publisherSpan).text().trim();
+        var authorNodes = $(authorSpan).clone().children().remove().end().contents();
+        var authors = [];
+        $(authorNodes).each(function(index, element) {
+            var authorName = $(element).text();
+            authorName = authorName.replace(/([.])+/g, '');
+            if (authorName != '') authors.push(authorName);
+        });
+        var publisher = $(publisherSpan).clone().children().remove().end().text().trim();
         var book = {
             title: title,
-            author: author,
+            authors: authors,
             cover: cover,
             bookId: bookId,
-            type: materialType,
-            language: language,
             publisher: publisher
         };
         searchResults.push(book);
