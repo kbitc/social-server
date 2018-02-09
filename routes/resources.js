@@ -100,7 +100,7 @@ router.post('/', upload.single('file'), function (req, res) {
     if (req.file) {
         logger.info('Uploaded file', { file: req.file.originalname });
         const PORT = process.env.PORT || 3000;
-        const host = req.protocol + '://' + req.hostname + ':' + PORT;
+        const host = req.protocol + '://' + req.hostname + '/vl';
         var fileObject = {
             url: host + '/resources/' + req.file.filename,
             filename: req.file.filename,
