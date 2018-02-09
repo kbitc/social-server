@@ -15,7 +15,7 @@ app.use(cors());
 // Define routes
 app.use(require('./routes'));
 // Define path or admin page
-app.use(serveStatic(path.join(__dirname, 'public'), {
+app.use(serveStatic('public', {
   cacheControl: true,
   etag: true
 }));
