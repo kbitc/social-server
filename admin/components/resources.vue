@@ -142,7 +142,7 @@ var ResourcesViewComponent = {
     },
     methods: {
         fetchResources: function () {
-            const resourcesURL = "http://localhost:3000/api/resources/";
+            const resourcesURL = "http://live3dmodelservice.ubicomp.oulu.fi/vl/api/resources/";
             axios.get(resourcesURL).then(function (response) {
                 this.resources = response.data.items;
                 this.activeResource = {};
@@ -154,7 +154,7 @@ var ResourcesViewComponent = {
             // Form package
             var files = document.getElementById('picture-upload').files;
             if (files.length > 0) {
-                const resourcesURL = "http://localhost:3000/api/resources/";
+                const resourcesURL = "http://live3dmodelservice.ubicomp.oulu.fi/vl/api/resources/";
                 var data = new FormData();
                 data.append('file', files[0]);
                 const config = {
@@ -178,7 +178,7 @@ var ResourcesViewComponent = {
             $('#edit-modal').modal('show');
         },
         remove: function (event) {
-            const resourcesURL = "http://localhost:3000/api/resources/" + this.activeResource.res + "/";
+            const resourcesURL = "http://live3dmodelservice.ubicomp.oulu.fi/vl/api/resources/" + this.activeResource.res + "/";
             axios.delete(resourcesURL).then(function (response) {
                 $('#delete-modal').modal('hide');
                 this.fetchResources();
@@ -187,7 +187,7 @@ var ResourcesViewComponent = {
             });
         },
         edit: function (event) {
-            const resourcesURL = "http://localhost:3000/api/resources/" + this.activeResource.res + "/";
+            const resourcesURL = "http://live3dmodelservice.ubicomp.oulu.fi/vl/api/resources/" + this.activeResource.res + "/";
             const newTitle = $('#edit-modal-title').val();
             const newAuthor = $('#edit-modal-author').val();
             const newAssigned = parseInt($('#edit-modal-assigned').val());
