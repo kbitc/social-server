@@ -16,8 +16,8 @@ app.use(cors());
 app.use(require('./routes'));
 // Define path or admin page
 app.use(serveStatic(path.join(__dirname, 'public'), {
-  cacheControl: false,
-  etag: false
+  cacheControl: true,
+  etag: true
 }));
 //app.use('/', express.static('./public'));
 // Set rendering mechanism. Though not used anywhere for now
