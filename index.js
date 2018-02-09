@@ -2,11 +2,15 @@ require('dotenv').config();
 
 const path = require('path');
 const express = require('express');
+var cors = require('cors');
 const axios = require('axios');
 const serveStatic = require('serve-static');
 const PORT = process.env.PORT || 3000;
 
 const app = express();
+
+// CORS
+app.use(cors());
 
 // Define routes
 app.use(require('./routes'));
