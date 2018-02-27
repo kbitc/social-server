@@ -18,6 +18,7 @@ const ouluLocation = '&branch_group_limit=branch%3AOUPK';
 // For goodreads
 const goodreads = 'https://www.goodreads.com';
 const byISBN = '/book/isbn/';
+const byTitle = '/search/index.xml';
 
 var logger = winston.loggers.get('books');
 
@@ -86,6 +87,33 @@ router.get('/', function (req, res) {
     }
     else {
         res.status(400).send('Include <search> or <id> in the query');
+    }
+});
+
+router.get('/goodreads', function (req, res) {
+    if (req.query.search != null) {
+        var search = req.query.search;
+        logger.info('Request to search in goodreads', { search: search });
+        var url = goodreads + byTitle + '?key=' + process.env.GOODREADS_TOKEN + '&q=' + search;
+        axios.get(url).then(function (response) {
+            xml2js.parseString(response.data, function (err, result) {
+                if (!err) {
+                    var grData = parseGoodreadsSearch(result);
+                    res.status(200).send({
+                        grData
+                    });
+                }
+                else {
+                    res.status(400).send('Error while processing goodreads response');
+                }
+            });
+        }).catch(function (error) {
+            logger.warn('Cannot retrieve goodreads details', { search: search });
+            res.status(404).send('Book was not found');
+        });
+    }
+    else {
+        res.status(400).send('Include <search> in the query');
     }
 });
 
@@ -168,7 +196,7 @@ function parseSearchResultsPage(page) {
         var bookId = querystring.parse(href, '?')["biblionumber"];
         var authorNodes = $(authorSpan).clone().children().remove().end().contents();
         var authors = [];
-        $(authorNodes).each(function(index, element) {
+        $(authorNodes).each(function (index, element) {
             var authorName = $(element).text();
             authorName = authorName.replace(/([.])+/g, '');
             if (authorName != '') authors.push(authorName);
@@ -218,6 +246,28 @@ function parseGoodReadsBook(page) {
         });
     }
     grData['similar'] = similar;
+    return grData;
+}
+
+function parseGoodreadsSearch(response) {
+    var grData = [];
+    var results = response.GoodreadsResponse.search[0].results[0].work;
+    for (var i = 0; i < results.length; i++) {
+        var book = results[i];
+        var authors = [];
+        var authorsData = book["best_book"][0]["author"];
+        for (var j = 0; j < authorsData.length; j++) {
+            var author = authorsData[j];
+            authors.push(author.name[0]);
+        }
+        grData.push({
+            grID: book["id"][0]["_"],
+            rating: book["average_rating"][0],
+            title: book["best_book"][0]["title"][0],
+            authors: authors,
+            cover: book["best_book"][0]["image_url"][0]
+        });
+    }
     return grData;
 }
 
